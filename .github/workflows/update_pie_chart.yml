@@ -1,0 +1,45 @@
+name: Update pie chart
+
+on:
+  schedule:
+  - cron: '0 0 * * 0' # Run every Sunday at midnight
+  workflow_dispatch:
+
+jobs:
+  count_issues:
+    runs-on: ubuntu-latest
+    # if: github.repository == 'nishinji/pie_chart'
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        pip install PyGithub
+        pip install matplotlib requests
+
+    - name: Retrieve issue counts
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        python .github/workflows/script/make_image.py
+
+    - name: Upload image
+      uses: actions/upload-artifact@v4
+      with:
+        name: compatibility_pie_chart
+        path: labels_pie_chart.svg
+
+    - name: Upload
+      shell: bash
+      run: |
+        wget -c https://github.com/tcnksm/ghr/releases/download/v0.16.2/ghr_v0.16.2_linux_amd64.tar.gz
+        tar xfv ghr_v0.16.2_linux_amd64.tar.gz
+        ghr_v0.16.2_linux_amd64/ghr -u nishinji -r pie_chart -recreate -n 'Release' -b "$(printf "Corresponding commit: ${{ github.sha }}")" continuous labels_pie_chart.svg
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
