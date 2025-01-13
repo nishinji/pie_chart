@@ -1,12 +1,19 @@
 const axios = require("axios");
 const fs = require("fs");
 
-// Vita3K APIからデータを取得してSVGを生成
 async function generateSVG() {
     try {
         const response = await axios.get("https://vita3k-api.pedro.moe/list/commercial");
         const data = response.data;
 
+        // 必要なデータ配列にアクセス
+        if (!data || !Array.isArray(data.list)) {
+            throw new Error("Unexpected data format: list is not an array");
+        }
+
+        const games = data.list;
+
+        // カウント集計
         const counts = {
             Nothing: 0,
             Bootable: 0,
@@ -17,14 +24,16 @@ async function generateSVG() {
             Playable: 0,
         };
 
-        data.forEach(game => {
+        games.forEach(game => {
             if (counts.hasOwnProperty(game.status)) {
                 counts[game.status]++;
             }
         });
 
+        // 合計数を計算
         const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
 
+        // SVGの生成
         let cumulativePercentage = 0;
         const colors = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#4CAF50"];
         let svgPaths = "";
@@ -60,7 +69,7 @@ async function generateSVG() {
         fs.writeFileSync("output.svg", svg);
         console.log("SVG file has been generated: output.svg");
     } catch (error) {
-        console.error("Error fetching data from Vita3K API:", error);
+        console.error("Error fetching data from Vita3K API:", error.message);
     }
 }
 
