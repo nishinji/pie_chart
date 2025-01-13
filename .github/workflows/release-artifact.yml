@@ -1,0 +1,36 @@
+name: Generate SVG and Upload as Artifact
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate-svg:
+    runs-on: ubuntu-latest
+
+    steps:
+      # リポジトリのクローン
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Node.js のセットアップ
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # 依存関係のインストール
+      - name: Install dependencies
+        run: npm install axios
+
+      # SVGの生成
+      - name: Generate SVG
+        run: node generate-piechart.js
+
+      # アーティファクトのアップロード
+      - name: Upload SVG as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: piechart-svg
+          path: output.svg

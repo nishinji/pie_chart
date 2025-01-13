@@ -1,16 +1,12 @@
-const express = require("express");
 const axios = require("axios");
+const fs = require("fs");
 
-const app = express();
-
-// APIエンドポイント
-app.get("/piechart", async (req, res) => {
+// Vita3K APIからデータを取得してSVGを生成
+async function generateSVG() {
     try {
-        // Vita3Kデータを取得
         const response = await axios.get("https://vita3k-api.pedro.moe/list/commercial");
         const data = response.data;
 
-        // カウント集計
         const counts = {
             Nothing: 0,
             Bootable: 0,
@@ -27,10 +23,8 @@ app.get("/piechart", async (req, res) => {
             }
         });
 
-        // 合計数を計算
         const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
 
-        // SVGの生成
         let cumulativePercentage = 0;
         const colors = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#4CAF50"];
         let svgPaths = "";
@@ -50,12 +44,10 @@ app.get("/piechart", async (req, res) => {
             svgPaths += `
 <path d="M16 16 L${x1} ${y1} A16 16 0 ${largeArcFlag} 1 ${x2} ${y2} Z"
       fill="${colors[index % colors.length]}">
-</path>
-            `;
+</path>`;
             cumulativePercentage += percentage;
         });
 
-        // SVG全体
         const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="400" height="400">
     ${svgPaths}
@@ -64,16 +56,13 @@ app.get("/piechart", async (req, res) => {
 </svg>
         `;
 
-        // SVGをレスポンスとして返す
-        res.setHeader("Content-Type", "image/svg+xml");
-        res.send(svg);
+        // SVGをファイルに保存
+        fs.writeFileSync("output.svg", svg);
+        console.log("SVG file has been generated: output.svg");
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Error fetching data from Vita3K API.");
+        console.error("Error fetching data from Vita3K API:", error);
     }
-});
+}
 
-// サーバー起動
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
+// 実行
+generateSVG();
