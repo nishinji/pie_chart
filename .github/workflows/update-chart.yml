@@ -1,0 +1,49 @@
+﻿name: Update Compatibility Chart
+
+on:
+  push:
+  workflow_dispatch:     # 手動実行可
+  schedule:
+    - cron: '0 0 * * *'   # 毎日UTC 0時 = 日本時間09:00
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: 📦 Install dependencies
+        run: pip install matplotlib requests
+
+      - name: 🖼️ Generate pie chart
+        run: python scripts/generate_chart.py
+
+      - name: Commit and push chart
+        env:
+          GITHUB_TOKEN: ${{ secrets.PUSH_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Get the current date (YYYY-MM-DD format)
+          DATE=$(date +"%Y-%m-%d")
+
+          # Clone the Vita3K_Logs repository
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/nishinji/pie_chart.git target-repo
+          cd target-repo
+
+          # Update the logs folder
+          rm -rf images
+          cp -r ../images ./
+
+          # Commit and push changes
+          git add images/chart.png
+          git commit -m "Update chart - ${DATE}"
+          git push origin main
