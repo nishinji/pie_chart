@@ -39,7 +39,8 @@ wedges, texts, autotexts = ax.pie(
     autopct='%1.1f%%',
     startangle=90,  # ← 上方向から開始
     colors=colors,
-    textprops={'color': 'white'}
+    textprops={'color': 'white'},
+    counterclock=True      # ← 反時計回りに変更
 )
 
 plt.axis('equal')
