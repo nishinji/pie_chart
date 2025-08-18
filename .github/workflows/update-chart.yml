@@ -20,7 +20,7 @@ jobs:
           python-version: '3.x'
 
       - name: 📦 Install dependencies
-        run: pip install matplotlib requests
+        run: pip install svgwrite requests
 
       - name: 🖼️ Generate pie chart
         run: python scripts/generate_chart.py
@@ -44,6 +44,6 @@ jobs:
           cp -r ../images ./
 
           # Commit and push changes
-          git add images/chart.png
+          git add images/chart.svg
           git commit -m "Update chart - ${DATE}"
           git push origin main
